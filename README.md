@@ -27,4 +27,4 @@ Requirements
 License
 -------
 
-The asyncnsq is offered under MIT license.
+The aplay is offered under MIT license.
