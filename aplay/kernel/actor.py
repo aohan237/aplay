@@ -6,26 +6,32 @@ from .const import ACTOR_RUNNING, ACTOR_STARTED, ACTOR_STOPPED
 
 
 class Actor:
-    def __init__(self, address: str=None, loop=None,
+    def __init__(self, loop=None, name: str=None,
                  parent=None, **kwargs):
-        self.address = '/' + address
+        self.name = name
         self.mailbox = asyncio.Queue()
         self.child = {}
         self.monitor = []
         self.runing_state = ACTOR_STOPPED
         self.parent = parent
+        if self.parent:
+            self.address = self.parent.address + '/' + self.name
+        else:
+            self.address = '/'
         self.loop = loop or asyncio.get_event_loop()
 
     def get_path_actor(self, address: str=None):
         if address.endswith('/'):
             address = address[:-1]
         path = ''
+        child_actor = self.child
         for i in address.strip('/').split('/'):
             path += '/' + i
-            if self.child.get(path):
+            if child_actor.get(i):
                 if path == address:
-                    return weakref.proxy(self.child.get(path))
+                    return weakref.proxy(child_actor.get(i))
                 else:
+                    child_actor = child_actor.get(i)
                     continue
             else:
                 break
@@ -56,12 +62,15 @@ class Actor:
         actor_logger.info(msg)
         self.start()
 
-    def create_actor(self, address=None, actor_cls=None):
+    def handle_task_done(self, *args, **kwargs):
+        pass
+
+    def create_actor(self, name=None, actor_cls=None):
         if actor_cls is None:
             actor_logger.exception("wrong actor_cls")
             raise Exception("wrong actor_cls")
-        actor = actor_cls(address=address, parent=self, loop=self.loop)
-        self.child[actor.address] = actor
+        actor = actor_cls(name=name, parent=self, loop=self.loop)
+        self.child[actor.name] = actor
         return weakref.proxy(actor)
 
     def stop(self):
@@ -75,20 +84,22 @@ class Actor:
             pass
 
     async def handler(self):
-        now = int(time.time() * 1000)
         self.runing_state = ACTOR_RUNNING
         try:
             while not self.mailbox.empty():
                 msg = await self.mailbox.get()
-                self.loop.create_task(self.msg_handler(msg))
+                task = self.loop.create_task(self.msg_handler(msg))
+                task.add_done_callback(self.handle_task_done)
         except Exception as tmp:
             actor_logger.exception(tmp)
             if self.parent:
                 self.parent.send_address(
                     self.address, msg={'error': tmp, 'message': msg})
         self.runing_state = ACTOR_STOPPED
-        print('running', int(time.time() * 1000) - now)
         actor_logger.info(f"{self.address} stopped")
 
     async def msg_handler(self, msg=None):
         return NotImplemented
+
+    async def tell(self, msg=None):
+        return await self.msg_handler(msg=msg)

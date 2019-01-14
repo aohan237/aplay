@@ -1,21 +1,20 @@
 import asyncio
 from .actor import Actor
 from .logger import actor_logger
-from .const import ACTOR_RUNNING, ACTOR_STARTED, ACTOR_STOPPED
+from .const import ACTOR_STARTED, ACTOR_STOPPED
 
 
 class KernelActor(Actor):
-    def __init__(self, address: str=None, loop=None,
+    def __init__(self, name: str=None, loop=None,
                  parent=None, max_workers=None, **kwargs):
         super(KernelActor, self).__init__(
-            address=address, loop=loop,
+            name=name, loop=loop,
             parent=parent, **kwargs)
-        self.address = address
-        self.parent = None
-        self.loop = loop or asyncio.get_event_loop()
 
     def stop(self):
         self.runing_state = ACTOR_STOPPED
+        self.loop.stop()
+        actor_logger.info('system loop stopped,exit')
 
     def start(self, address=None):
         if self.runing_state == ACTOR_STOPPED:
@@ -25,3 +24,5 @@ class KernelActor(Actor):
             self.loop.run_forever()
         except KeyboardInterrupt:
             actor_logger.info('keyboard interrupt,system closed')
+        finally:
+            actor_logger.info('system loop stopped,exit')
