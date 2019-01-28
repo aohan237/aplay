@@ -3,6 +3,7 @@ from aplay.kernel.actor import Actor
 from aplay.kernel.system import KernelActor
 from sanic import Sanic
 from sanic.response import json
+import asyncio
 
 msg_logger = logging.getLogger('sanic.access')
 
@@ -36,5 +37,6 @@ class SanicKernel(KernelActor):
 
 
 bb = SanicKernel("nsq")
-bb.send("hahaha")
+loop = asyncio.get_event_loop()
+loop.create_task(bb.send("hahaha"))
 bb.start()

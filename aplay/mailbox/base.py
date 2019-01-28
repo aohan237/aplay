@@ -5,7 +5,6 @@ import uuid
 
 class MailBox:
     def __init__(self, *args, **kwargs):
-        super(MailBox, self).__init__(*args, **kwargs)
         self.name = kwargs.get('name', str(uuid.uuid1()))
 
     async def put(self, msg=None):

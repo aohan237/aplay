@@ -17,4 +17,6 @@ class QueueMailBox(MailBox):
         return self.queue.empty()
 
     async def get(self):
-        return self.queue.get()
+        result = None
+        result = await self.queue.get()
+        return result

@@ -22,7 +22,7 @@ class RedisQueue(MailBox):
 
     async def size(self):
         await self.connect_pool()
-        await self.pool.llen(self.name)
+        return await self.pool.llen(self.name)
 
     async def empty(self):
         await self.connect_pool()
@@ -35,7 +35,11 @@ class RedisQueue(MailBox):
         return self.loads_msg(raw_data)
 
     def dumps_msg(self, msg=None):
+        if msg is None:
+            return ''
         return json.dumps(msg)
 
     def loads_msg(self, msg=None):
+        if msg is None:
+            return None
         return json.loads(msg)

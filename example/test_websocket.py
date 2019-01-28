@@ -15,7 +15,7 @@ class SocketActor(Actor):
     def __init__(self, *args, **kwargs):
         super(SocketActor, self).__init__(*args, **kwargs)
         self.websocket = kwargs.get('websocket', None)
-        self.queue = RedisQueue(name=self.name)
+        # self.mailbox = RedisQueue(name=self.name)
 
     def decide_to_start(self):
         if self.websocket is None:
@@ -30,7 +30,8 @@ class SocketActor(Actor):
     async def msg_handler(self, msg=None):
         if not isinstance(msg, str):
             msg = json.dumps(msg)
-        await self.websocket.send(msg)
+        if self.websocket and msg:
+            await self.websocket.send(msg)
 
 
 class WebsocketKernel(KernelActor):
@@ -50,7 +51,7 @@ class WebsocketKernel(KernelActor):
                 print('websocket is closed')
                 break
             except concurrent.futures._base.TimeoutError:
-                print('receive data timeout', websocket.closed)
+                print('receive data timeout,websocket is closed:', websocket.closed)
                 if websocket.closed:
                     break
                 data = None
@@ -70,7 +71,7 @@ class WebsocketKernel(KernelActor):
                 if from_actor.websocket is not websocket:
                     from_actor.set_websocket(websocket)
                 print('from_actor data:', from_actor.name,
-                      from_actor.mailbox.qsize())
+                      from_actor.mailbox.size())
 
                 # 记录websocket的用户
                 if websocket not in self.socket_dict:
@@ -86,7 +87,7 @@ class WebsocketKernel(KernelActor):
 
                 # send data to to user socket
                 actor = self.child.get(to_user)
-                actor.send(data)
+                await actor.send(data)
             # start handle actor
             if from_actor is not None:
                 from_actor.start()
@@ -99,9 +100,11 @@ class WebsocketKernel(KernelActor):
         print('self.socket_dict pop result', self.socket_dict)
 
     async def msg_handler(self, msg=None):
+        print('kernel msg', msg)
         await self.websocket_server
 
 
 bb = WebsocketKernel("web")
-bb.send("hahaha")
+task = bb.loop.create_task(bb.send("hahaha"))
+print(task)
 bb.start()

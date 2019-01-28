@@ -3,6 +3,7 @@ from asyncnsq import create_writer
 from aplay.kernel.actor import Actor
 from aplay.kernel.system import KernelActor
 from aplay.kernel.logger import actor_logger
+import asyncio
 
 
 class MessageActor(Actor):
@@ -43,10 +44,13 @@ class NsqKernelActor(KernelActor):
 
 
 bb = NsqKernelActor("nsq")
-bb.send({
-    "nsqd_tcp_addresses": ['127.0.0.1:4150'],
-    "max_in_flight": 200,
-    "topic": 'test_async_nsq',
-    "channel": 'nsq',
-})
+loop = asyncio.get_event_loop()
+loop.create_task(
+    bb.send({
+        "nsqd_tcp_addresses": ['127.0.0.1:4150'],
+        "max_in_flight": 200,
+        "topic": 'test_async_nsq',
+        "channel": 'nsq',
+    })
+)
 bb.start()

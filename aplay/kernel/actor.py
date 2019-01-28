@@ -91,7 +91,7 @@ class Actor:
     async def handler(self):
         self.runing_state = ACTOR_RUNNING
         try:
-            while not self.mailbox.empty():
+            while not await self.mailbox.empty():
                 msg = await self.mailbox.get()
                 task = self.loop.create_task(self.msg_handler(msg))
                 task.add_done_callback(self.handle_task_done)

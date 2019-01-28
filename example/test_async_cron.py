@@ -1,6 +1,7 @@
 from aplay.kernel.system import KernelActor
 from async_cron.schedule import Scheduler
 from async_cron.job import CronJob
+import asyncio
 
 
 class SchedulerKernel(KernelActor):
@@ -28,5 +29,6 @@ job2 = CronJob(name='tt', tolerance=100).every().at(
 bb = SchedulerKernel()
 bb.sch.add_job(myjob)
 bb.sch.add_job(job2)
-bb.send("hahaha")
+loop = asyncio.get_event_loop()
+loop.create_task(bb.send("hahaha"))
 bb.start()
