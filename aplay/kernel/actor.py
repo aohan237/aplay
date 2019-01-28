@@ -3,13 +3,14 @@ import weakref
 import time
 from .logger import actor_logger
 from .const import ACTOR_RUNNING, ACTOR_STARTED, ACTOR_STOPPED
+from aplay.mailbox.queue_mailbox import QueueMailBox
 
 
 class Actor:
     def __init__(self, loop=None, name: str=None,
                  parent=None, **kwargs):
         self.name = name
-        self.mailbox = asyncio.Queue()
+        self.mailbox = QueueMailBox(name=name)
         self.child = {}
         self.monitor = []
         self.runing_state = ACTOR_STOPPED
@@ -19,6 +20,9 @@ class Actor:
         else:
             self.address = '/'
         self.loop = loop or asyncio.get_event_loop()
+
+    def decide_to_start(self):
+        return True
 
     def get_path_actor(self, address: str=None):
         if address.endswith('/'):
@@ -37,9 +41,9 @@ class Actor:
                 break
         return None
 
-    def send(self, message=None):
+    async def send(self, message=None):
         if message is not None:
-            self.mailbox.put_nowait(message)
+            await self.mailbox.put(message)
             if self.parent:
                 self.parent.send_address(self.address)
 
@@ -50,7 +54,8 @@ class Actor:
                 if actor.runing_state == ACTOR_STARTED:
                     pass
                 else:
-                    actor.start()
+                    if self.decide_to_start():
+                        actor.start()
             else:
                 actor.handle_panic(msg=msg)
 
