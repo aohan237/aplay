@@ -1,5 +1,6 @@
 import aioredis
 import json
+import pickle
 from .base import MailBox
 
 
@@ -37,9 +38,9 @@ class RedisQueue(MailBox):
     def dumps_msg(self, msg=None):
         if msg is None:
             return ''
-        return json.dumps(msg)
+        return pickle.dumps(msg)
 
     def loads_msg(self, msg=None):
         if msg is None:
             return None
-        return json.loads(msg)
+        return pickle.loads(msg)

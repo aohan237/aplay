@@ -13,10 +13,12 @@ class KernelActor(Actor):
 
     def stop(self):
         self.runing_state = ACTOR_STOPPED
+        self.human_runing_state = ACTOR_STOPPED
         self.loop.stop()
         actor_logger.info('system loop stopped,exit')
 
     def start(self, address=None):
+
         if self.runing_state == ACTOR_STOPPED:
             self.runing_state = ACTOR_STARTED
         try:
