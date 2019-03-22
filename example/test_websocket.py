@@ -15,7 +15,7 @@ class SocketActor(Actor):
     def __init__(self, *args, **kwargs):
         super(SocketActor, self).__init__(*args, **kwargs)
         self.websocket = kwargs.get('websocket', None)
-        # self.mailbox = RedisQueue(name=self.name)
+        self.mailbox = RedisQueue(name=self.name)
 
     def decide_to_start(self):
         if self.websocket is None:
