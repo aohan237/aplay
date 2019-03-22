@@ -3,25 +3,31 @@ from aplay.kernel.actor import Actor
 from aplay.kernel.system import KernelActor
 from sanic import Sanic
 from sanic.response import json
+import json as ujson
 import asyncio
+import time
 
 msg_logger = logging.getLogger('sanic.access')
 
 
 class MessageActor(Actor):
+    def __init__(self, *args, **kwargs):
+        super(MessageActor, self).__init__(*args, **kwargs)
+        self.max_tasks = 10
 
     async def msg_handler(self, msg=None):
-        print(msg)
+        print('msg_handler', msg)
+        await asyncio.sleep(5)
 
 
-app = Sanic()
+app = Sanic(log_config=None)
 # app.config.KEEP_ALIVE = False
 
 
 @app.route('/')
 async def test(request):
     actor = request.app.actor
-    actor.send({'hello': 'world'})
+    await actor.send(message={'hello': 'world'})
     return json({'hello': 'world'})
 
 

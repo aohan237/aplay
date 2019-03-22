@@ -1,6 +1,7 @@
 import asyncio
 import weakref
 import time
+from functools import partial
 from .logger import actor_logger
 from .const import ACTOR_RUNNING, ACTOR_STARTED, ACTOR_STOPPED
 from aplay.mailbox.queue_mailbox import QueueMailBox
@@ -8,21 +9,30 @@ from aplay.mailbox.queue_mailbox import QueueMailBox
 
 class Actor:
     def __init__(self, loop=None, name: str=None,
-                 parent=None, **kwargs):
+                 parent=None, max_tasks=None, **kwargs):
         self.name = name
         self.mailbox = QueueMailBox(name=name)
         self.child = {}
         self.monitor = []
         self.runing_state = ACTOR_STOPPED
+        self.human_runing_state = ACTOR_STARTED
         self.parent = parent
+        self.max_tasks = max_tasks or 50
+        self.running_task = 0
         if self.parent:
-            self.address = self.parent.address + '/' + self.name
+            if self.parent.address == '/':
+                self.address = self.parent.address + self.name
+            else:
+                self.address = self.parent.address + '/' + self.name
         else:
             self.address = '/'
         self.loop = loop or asyncio.get_event_loop()
 
     def decide_to_start(self):
-        return True
+        if self.human_runing_state == ACTOR_STOPPED:
+            return False
+        else:
+            return True
 
     def get_path_actor(self, address: str=None):
         if address.endswith('/'):
@@ -48,7 +58,8 @@ class Actor:
                 self.parent.send_address(self.address)
 
     def send_address(self, address=None, msg: {}=None):
-        actor = self.child.get(address)
+
+        actor = self.get_path_actor(address)
         if actor:
             if not msg:
                 if actor.runing_state == ACTOR_STARTED:
@@ -68,6 +79,14 @@ class Actor:
         self.start()
 
     def handle_task_done(self, *args, **kwargs):
+        self.running_task -= 1
+        self.loop.create_task(self.task_done_new_task())
+        try:
+            self.user_task_callback(*args, **kwargs)
+        except Exception as tmp:
+            actor_logger.exception(tmp)
+
+    def user_task_callback(self, *args, **kwargs):
         pass
 
     def create_actor(self, name=None, actor_cls=None):
@@ -80,6 +99,10 @@ class Actor:
 
     def stop(self):
         self.runing_state = ACTOR_STOPPED
+        self.human_runing_state = ACTOR_STOPPED
+
+    def human_start(self):
+        self.human_runing_state = ACTOR_STARTED
 
     def start(self):
         if self.runing_state == ACTOR_STOPPED:
@@ -88,18 +111,31 @@ class Actor:
         elif self.runing_state == ACTOR_RUNNING:
             pass
 
+    async def create_msg_task(self):
+        msg = await self.mailbox.get()
+        task = self.loop.create_task(self.msg_handler(msg))
+        m_callback = partial(self.handle_task_done, msg=msg)
+        task.add_done_callback(m_callback)
+        self.running_task += 1
+
+    async def task_done_new_task(self):
+        if not await self.mailbox.empty():
+            await self.create_msg_task()
+        if self.running_task <= 0:
+            self.runing_state = ACTOR_STOPPED
+
     async def handler(self):
         self.runing_state = ACTOR_RUNNING
         try:
             while not await self.mailbox.empty():
-                msg = await self.mailbox.get()
-                task = self.loop.create_task(self.msg_handler(msg))
-                task.add_done_callback(self.handle_task_done)
+                if self.running_task <= self.max_tasks:
+                    await self.create_msg_task()
+                else:
+                    actor_logger.info(
+                        f'{self.address} running task exceeds max tasks,waiting')
+                    break
         except Exception as tmp:
             actor_logger.exception(tmp)
-            if self.parent:
-                self.parent.send_address(
-                    self.address, msg={'error': tmp, 'message': msg})
         self.runing_state = ACTOR_STOPPED
         actor_logger.info(f"{self.address} stopped")
 
