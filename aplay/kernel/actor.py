@@ -66,7 +66,7 @@ class Actor:
         actor = self.get_path_actor(address)
         if actor:
             if not msg:
-                if actor.runing_state == ACTOR_STARTED:
+                if actor.runing_state == ACTOR_RUNNING:
                     pass
                 else:
                     if self.decide_to_start():
