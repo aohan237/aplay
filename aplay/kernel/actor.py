@@ -37,10 +37,14 @@ class Actor:
     def get_path_actor(self, address: str=None):
         if address.endswith('/'):
             address = address[:-1]
-        path = ''
+        path = self.address
+        compare_address = address.strip(self.address)
         child_actor = self.child
-        for i in address.strip('/').split('/'):
-            path += '/' + i
+        for i in compare_address.strip('/').split('/'):
+            if path == '/':
+                path += i
+            else:
+                path += '/' + i
             if child_actor.get(i):
                 if path == address:
                     return weakref.proxy(child_actor.get(i))

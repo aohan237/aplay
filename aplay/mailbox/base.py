@@ -1,5 +1,4 @@
 from asyncio.queues import Queue
-from redis import Redis
 import uuid
 
 
