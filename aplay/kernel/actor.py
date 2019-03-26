@@ -132,7 +132,7 @@ class Actor:
         self.runing_state = ACTOR_RUNNING
         try:
             while not await self.mailbox.empty():
-                if self.running_task <= self.max_tasks:
+                if self.running_task < self.max_tasks:
                     await self.create_msg_task()
                 else:
                     actor_logger.info(
