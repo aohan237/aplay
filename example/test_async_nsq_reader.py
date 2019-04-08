@@ -40,7 +40,7 @@ class NsqKernelActor(KernelActor):
         await reader.subscribe(topic, channel)
         msg_actor = self.create_actor('msg', actor_cls=MessageActor)
         async for message in reader.messages():
-            msg_actor.send(message)
+            await msg_actor.send(message)
 
 
 bb = NsqKernelActor("nsq")
