@@ -1,18 +1,23 @@
 import asyncio
-from actor import Actor
-from system import KernelActor
+from aplay.kernel.actor import Actor
+from aplay.kernel.system import KernelActor
 
 
 class NameActor(Actor):
     async def msg_handler(self, msg=None):
         print("nameactor", msg)
 
+class MyKernel(KernelActor):
+    def __init__(self,*args,**kwargs):
+        super(MyKernel,self).__init__(*args,**kwargs)
+        self.actor = self.create_actor(name="user", actor_cls=NameActor)
+    async def msg_handler(self,msg=None):
+        print('mykernel',msg)
 
-bb = KernelActor("kernel")
-n_actor = bb.create_actor(address="user", actor_cls=NameActor)
-for i in range(100000):
-    n_actor.send(message=f"hello{i}")
-old_actor = bb.get_path_actor('/kernel/user')
-for i in range(100000):
-    n_actor.send(message=f"old_actor{i}")
+        for i in range(100000):
+            await self.actor.send(message=f"hello{i}")
+
+bb = MyKernel("kernel")
+loop=asyncio.get_event_loop()
+loop.run_until_complete(bb.send('start'))
 bb.start()
