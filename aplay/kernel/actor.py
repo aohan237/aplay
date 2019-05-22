@@ -8,10 +8,12 @@ from aplay.mailbox.queue_mailbox import QueueMailBox
 
 
 class Actor:
-    def __init__(self, loop=None, name: str=None,
-                 parent=None, max_tasks=None, **kwargs):
+    def __init__(self, loop=None, name: str=None, mailbox=None,
+                 parent=None, max_tasks=None, mail_address=None,
+                 **kwargs):
         self.name = name
-        self.mailbox = QueueMailBox(name=name)
+        mailbox = mailbox or QueueMailBox
+        self.mailbox = mailbox(name=name, mail_address=mail_address)
         self.child = {}
         self.monitor = []
         self.runing_state = ACTOR_STOPPED
