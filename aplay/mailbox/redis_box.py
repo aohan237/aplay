@@ -16,21 +16,20 @@ class RedisQueue(MailBox):
             self.pool = await aioredis.create_redis_pool(
                 self.redis_uri)
 
-    async def put(self, msg=None):
+    async def prepare(self):
         await self.connect_pool()
+
+    async def put(self, msg=None):
         await self.pool.lpush(self.name, self.dumps_msg(msg))
 
     async def size(self):
-        await self.connect_pool()
         return await self.pool.llen(self.name)
 
     async def empty(self):
-        await self.connect_pool()
         length = await self.size()
         return length == 0
 
     async def get(self):
-        await self.connect_pool()
         raw_data = await self.pool.rpop(self.name)
         return self.loads_msg(raw_data)
 

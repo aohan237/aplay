@@ -28,6 +28,7 @@ class MessageActor(Actor):
 
 
 class NsqKernelActor(KernelActor):
+
     async def msg_handler(self, msg=None):
         nsqd_tcp_addresses = msg.get(
             'nsqd_tcp_addresses', ['127.0.0.1:4150'])
@@ -44,13 +45,10 @@ class NsqKernelActor(KernelActor):
 
 
 bb = NsqKernelActor("nsq")
-loop = asyncio.get_event_loop()
-loop.create_task(
-    bb.send({
-        "nsqd_tcp_addresses": ['127.0.0.1:4150'],
-        "max_in_flight": 200,
-        "topic": 'test_async_nsq',
-        "channel": 'nsq',
-    })
-)
+bb.send_nowait({
+    "nsqd_tcp_addresses": ['127.0.0.1:4150'],
+    "max_in_flight": 200,
+    "topic": 'test_async_nsq',
+    "channel": 'nsq',
+})
 bb.start()

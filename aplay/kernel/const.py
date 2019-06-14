@@ -5,3 +5,5 @@ ACTOR_STARTED = 'started'
 ACTOR_RUNNING = 'running'
 
 ACTOR_BLANK = 'running'
+
+ACTOR_INIT = 'init'

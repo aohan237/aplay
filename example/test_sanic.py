@@ -6,6 +6,8 @@ from sanic.response import json
 import json as ujson
 import asyncio
 import time
+import uvloop
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 msg_logger = logging.getLogger('sanic.access')
 
@@ -27,8 +29,8 @@ app = Sanic(log_config=None)
 @app.route('/')
 async def test(request):
     actor = request.app.actor
-    await actor.send(message={'hello': 'world'})
-    return json({'hello': 'world'})
+    await actor.send(message={'hello': 'sss'})
+    return json({'hello': 'sss'})
 
 
 class SanicKernel(KernelActor):
@@ -39,10 +41,12 @@ class SanicKernel(KernelActor):
         self.app.actor = self.create_actor('msg', actor_cls=MessageActor)
 
     async def msg_handler(self, msg=None):
-        await self.app.create_server(host="0.0.0.0", port=8000)
+        """
+        sanic loop does not support use loop outside,only this way can do 
+        """
+        await self.app.create_server(host="0.0.0.0", port=8000, return_asyncio_server=True)
 
 
-bb = SanicKernel("nsq")
-loop = asyncio.get_event_loop()
-loop.create_task(bb.send("hahaha"))
+bb = SanicKernel("sanic")
+bb.send_nowait('start')
 bb.start()
