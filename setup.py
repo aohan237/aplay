@@ -4,7 +4,7 @@ import sys
 from setuptools import setup, find_packages
 
 
-install_requires = ['aioredis']
+install_requires = ['aioredis', 'psutil']
 NAME = 'aplay'
 PACKAGE = 'aplay'
 PY_VER = sys.version_info

@@ -7,7 +7,8 @@ from .base import MailBox
 class RedisQueue(MailBox):
     """A subclass of Queue that retrieves most recently added entries first."""
 
-    def __init__(self, name=None, mail_address=None):
+    def __init__(self, *args, mail_address=None, **kwargs):
+        super(RedisQueue, self).__init__(*args, **kwargs)
         self.redis_uri = mail_address or 'redis://127.0.0.1'
         self.pool = None
 
