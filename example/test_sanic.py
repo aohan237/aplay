@@ -1,3 +1,7 @@
+import sys
+import os
+pwd = os.getcwd()
+sys.path.append('/'.join(os.getcwd().split('/')[:-1]))
 import logging
 from aplay.kernel.actor import Actor
 from aplay.kernel.system import KernelActor
@@ -15,7 +19,7 @@ msg_logger = logging.getLogger('sanic.access')
 class MessageActor(Actor):
     def __init__(self, *args, **kwargs):
         super(MessageActor, self).__init__(*args, **kwargs)
-        self.max_tasks = 10
+        self._max_tasks = 10
 
     async def msg_handler(self, msg=None):
         print('msg_handler', msg)

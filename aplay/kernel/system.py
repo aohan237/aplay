@@ -14,19 +14,19 @@ class KernelActor(Actor):
         self._kernel = weakref.proxy(self)
 
     def stop(self):
-        self.runing_state = ACTOR_STOPPED
-        self.human_runing_state = ACTOR_STOPPED
-        self.loop.stop()
+        self._runing_state = ACTOR_STOPPED
+        self._human_runing_state = ACTOR_STOPPED
+        self._loop.stop()
         actor_logger.info('system loop stopped,exit')
 
     def kernel_run(self):
-        self.loop.create_task(self.handler())
-        self.loop.run_forever()
+        self._loop.create_task(self.handler())
+        self._loop.run_forever()
 
     def start(self, address=None):
 
-        if self.runing_state == ACTOR_STOPPED:
-            self.runing_state = ACTOR_STARTED
+        if self._runing_state == ACTOR_STOPPED:
+            self._runing_state = ACTOR_STARTED
         try:
             self.kernel_run()
         except KeyboardInterrupt:

@@ -8,24 +8,25 @@ logger = logging.getLogger(__package__)
 class QueueMailBox(MailBox):
     def __init__(self, *args, **kwargs):
         super(QueueMailBox, self).__init__(*args, **kwargs)
-        self.queue = Queue()
+        self._queue = Queue()
+        self._ready = True
 
     async def prepare(self):
-        pass
+        self._ready = True
 
     async def put(self, msg=None):
         if await self.policy():
-            self.queue.put_nowait(msg)
+            self._queue.put_nowait(msg)
 
     async def size(self):
-        return self.queue.qsize()
+        return self._queue.qsize()
 
     async def empty(self):
-        return self.queue.empty()
+        return self._queue.empty()
 
     async def get(self):
         result = None
-        result = await self.queue.get()
+        result = await self._queue.get()
         return result
 
     async def policy(self):
