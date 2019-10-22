@@ -1,3 +1,7 @@
+import sys
+import os
+pwd = os.getcwd()
+sys.path.append('/'.join(os.getcwd().split('/')[:-1]))
 import logging
 import websockets
 import asyncio
@@ -15,7 +19,7 @@ class SocketActor(Actor):
     def __init__(self, *args, **kwargs):
         super(SocketActor, self).__init__(*args, **kwargs)
         self.websocket = kwargs.get('websocket', None)
-        self.mailbox = RedisQueue(name=self.name)
+        self._mailbox = RedisQueue(name=self._name)
 
     def decide_to_start(self):
         if self.websocket is None:
@@ -63,11 +67,11 @@ class WebsocketKernel(KernelActor):
                 to_user = data.get('to')
 
                 # prepare for user socket
-                if from_user not in self.child:
+                if from_user not in self._child:
                     from_actor = self.create_actor(
                         name=from_user, actor_cls=SocketActor)
                 else:
-                    from_actor = self.child.get(from_user)
+                    from_actor = self._child.get(from_user)
                 if from_actor.websocket is not websocket:
                     from_actor.set_websocket(websocket)
                 print('from_actor data:', from_actor.name,
@@ -79,14 +83,14 @@ class WebsocketKernel(KernelActor):
                 else:
                     self.socket_dict[websocket] = from_actor
 
-                if to_user not in self.child:
+                if to_user not in self._child:
                     self.create_actor(
                         name=to_user, actor_cls=SocketActor)
 
-                print(self.socket_dict, self.child)
+                print(self.socket_dict, self._child)
 
                 # send data to to user socket
-                actor = self.child.get(to_user)
+                actor = self._child.get(to_user)
                 await actor.send(data)
             # start handle actor
             if from_actor is not None:
@@ -105,6 +109,6 @@ class WebsocketKernel(KernelActor):
 
 
 bb = WebsocketKernel("web")
-task = bb.loop.create_task(bb.send("hahaha"))
+task = bb._loop.create_task(bb.send("hahaha"))
 print(task)
 bb.start()

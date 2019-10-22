@@ -4,7 +4,11 @@ import uuid
 
 class MailBox:
     def __init__(self, *args, **kwargs):
-        self.name = kwargs.get('name', str(uuid.uuid1()))
+        self._name = kwargs.get('name', str(uuid.uuid1()))
+        self._ready = False
+
+    async def ready(self):
+        return self._ready
 
     async def prepare(self):
         raise NotImplementedError

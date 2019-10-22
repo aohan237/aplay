@@ -1,3 +1,7 @@
+import sys
+import os
+pwd = os.getcwd()
+sys.path.append('/'.join(os.getcwd().split('/')[:-1]))
 from aplay.kernel.system import KernelActor
 from async_cron.schedule import Scheduler
 from async_cron.job import CronJob

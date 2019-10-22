@@ -1,3 +1,7 @@
+import sys
+import os
+pwd = os.getcwd()
+sys.path.append('/'.join(os.getcwd().split('/')[:-1]))
 from asyncnsq import create_reader
 from asyncnsq import create_writer
 from aplay.kernel.actor import Actor
