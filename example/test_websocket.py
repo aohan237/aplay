@@ -1,7 +1,8 @@
 import sys
 import os
+
 pwd = os.getcwd()
-sys.path.append('/'.join(os.getcwd().split('/')[:-1]))
+sys.path.append("/".join(os.getcwd().split("/")[:-1]))
 import logging
 import websockets
 import asyncio
@@ -11,14 +12,13 @@ from aplay.kernel.actor import Actor
 from aplay.kernel.system import KernelActor
 from aplay.mailbox.redis_box import RedisQueue
 
-msg_logger = logging.getLogger('sanic.access')
+msg_logger = logging.getLogger("sanic.access")
 
 
 class SocketActor(Actor):
-
     def __init__(self, *args, **kwargs):
         super(SocketActor, self).__init__(*args, **kwargs)
-        self.websocket = kwargs.get('websocket', None)
+        self.websocket = kwargs.get("websocket", None)
         self._mailbox = RedisQueue(name=self._name)
 
     def decide_to_start(self):
@@ -39,10 +39,9 @@ class SocketActor(Actor):
 
 
 class WebsocketKernel(KernelActor):
-
     def __init__(self, *args, **kwargs):
         super(WebsocketKernel, self).__init__(*args, **kwargs)
-        self.websocket_server = websockets.serve(self.tt, 'localhost', 9876)
+        self.websocket_server = websockets.serve(self.tt, "localhost", 9876)
         self.socket_dict = {}
 
     async def tt(self, websocket, path):
@@ -52,10 +51,10 @@ class WebsocketKernel(KernelActor):
             try:
                 data = await asyncio.wait_for(websocket.recv(), 2)
             except websockets.exceptions.ConnectionClosed:
-                print('websocket is closed')
+                print("websocket is closed")
                 break
             except concurrent.futures._base.TimeoutError:
-                print('receive data timeout,websocket is closed:', websocket.closed)
+                print("receive data timeout,websocket is closed:", websocket.closed)
                 if websocket.closed:
                     break
                 data = None
@@ -63,19 +62,19 @@ class WebsocketKernel(KernelActor):
             if data is not None:
 
                 data = json.loads(data)
-                from_user = data.get('from')
-                to_user = data.get('to')
+                from_user = data.get("from")
+                to_user = data.get("to")
 
                 # prepare for user socket
                 if from_user not in self._child:
                     from_actor = self.create_actor(
-                        name=from_user, actor_cls=SocketActor)
+                        name=from_user, actor_cls=SocketActor
+                    )
                 else:
                     from_actor = self._child.get(from_user)
                 if from_actor.websocket is not websocket:
                     from_actor.set_websocket(websocket)
-                print('from_actor data:', from_actor.name,
-                      from_actor.mailbox.size())
+                print("from_actor data:", from_actor.name, from_actor.mailbox.size())
 
                 # 记录websocket的用户
                 if websocket not in self.socket_dict:
@@ -84,8 +83,7 @@ class WebsocketKernel(KernelActor):
                     self.socket_dict[websocket] = from_actor
 
                 if to_user not in self._child:
-                    self.create_actor(
-                        name=to_user, actor_cls=SocketActor)
+                    self.create_actor(name=to_user, actor_cls=SocketActor)
 
                 print(self.socket_dict, self._child)
 
@@ -96,15 +94,15 @@ class WebsocketKernel(KernelActor):
             if from_actor is not None:
                 from_actor.start()
 
-        print('websocket is closed,pop from self.socket_dict', self.socket_dict)
+        print("websocket is closed,pop from self.socket_dict", self.socket_dict)
         # reset websocket and actor websocket
         self.socket_dict.pop(websocket)
         if from_actor is not None:
             from_actor.reset_websocket()
-        print('self.socket_dict pop result', self.socket_dict)
+        print("self.socket_dict pop result", self.socket_dict)
 
     async def msg_handler(self, msg=None):
-        print('kernel msg', msg)
+        print("kernel msg", msg)
         await self.websocket_server
 
 

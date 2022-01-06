@@ -7,10 +7,17 @@ from aplay.mailbox.queue_mailbox import QueueMailBox
 
 
 class Actor:
-    def __init__(self, loop=None, name: str = None, mailbox=None,
-                 parent=None, max_tasks=None, mail_address=None,
-                 kernel=None,
-                 **kwargs):
+    def __init__(
+        self,
+        loop=None,
+        name: str = None,
+        mailbox=None,
+        parent=None,
+        max_tasks=None,
+        mail_address=None,
+        kernel=None,
+        **kwargs,
+    ):
         self._name = name
         mailbox = mailbox or QueueMailBox
         self._mailbox = mailbox(name=name, mail_address=mail_address)
@@ -23,12 +30,12 @@ class Actor:
         self._running_task = 0
         self._kernel = kernel
         if self._parent:
-            if self._parent._address == '/':
+            if self._parent._address == "/":
                 self._address = self._parent._address + self._name
             else:
-                self._address = self._parent._address + '/' + self._name
+                self._address = self._parent._address + "/" + self._name
         else:
-            self._address = '/'
+            self._address = "/"
         self._loop = loop or asyncio.get_event_loop()
 
     def get_actor(self, name=None):
@@ -51,11 +58,11 @@ class Actor:
         """
         get the corresponding actor ,only use address
         """
-        root_path = '/'
-        if address.endswith(root_path) and address != '/':
+        root_path = "/"
+        if address.endswith(root_path) and address != "/":
             address = address[:-1]
         path = self._kernel.address
-        compare_address = address.replace(self._address + root_path, '')
+        compare_address = address.replace(self._address + root_path, "")
         child_actor = self._kernel.child
         for i in compare_address.strip(root_path).split(root_path):
             if path == root_path:
@@ -74,11 +81,11 @@ class Actor:
         return None
 
     def get_path_actor(self, address: str = None):
-        root_path = '/'
+        root_path = "/"
         if address.endswith(root_path):
             address = address[:-1]
         path = self._address
-        compare_address = address.replace(self._address + root_path, '')
+        compare_address = address.replace(self._address + root_path, "")
         child_actor = self._child
         for i in compare_address.strip(root_path).split(root_path):
             if path == root_path:
@@ -107,7 +114,7 @@ class Actor:
         task = self._loop.create_task(self.send(message=message))
         return task
 
-    def send_address(self, address=None, msg: {} = None):
+    def send_address(self, address=None, msg: dict = None):
         actor = self.get_path_actor(address)
         if actor:
             if not msg:
@@ -123,7 +130,7 @@ class Actor:
         # if self._runing_state == "stopped" and self._parent:
         #     self._parent.send_address(self._address)
 
-    def handle_panic(self, msg: {} = None):
+    def handle_panic(self, msg: dict = None):
         actor_logger.info(msg)
         self.start()
 
@@ -142,8 +149,7 @@ class Actor:
         if actor_cls is None:
             actor_logger.exception("wrong actor_cls")
             raise Exception("wrong actor_cls")
-        actor = actor_cls(name=name, parent=self,
-                          loop=self._loop, kernel=self._kernel)
+        actor = actor_cls(name=name, parent=self, loop=self._loop, kernel=self._kernel)
         self._child[actor._name] = actor
         return weakref.proxy(actor)
 
@@ -155,8 +161,7 @@ class Actor:
         self._human_runing_state = ACTOR_STARTED
 
     def start(self):
-        if self._runing_state == ACTOR_STOPPED or \
-                self._runing_state == ACTOR_INIT:
+        if self._runing_state == ACTOR_STOPPED or self._runing_state == ACTOR_INIT:
             self._loop.create_task(self.handler())
         elif self._runing_state == ACTOR_RUNNING:
             pass
@@ -192,7 +197,8 @@ class Actor:
                     await self.create_msg_task()
                 else:
                     actor_logger.info(
-                        f'{self._address} running task exceeds max tasks,waiting')
+                        f"{self._address} running task exceeds max tasks,waiting"
+                    )
                     break
         except Exception as tmp:
             actor_logger.exception(tmp)
