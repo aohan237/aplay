@@ -2,12 +2,14 @@ from .base import MailBox
 from asyncio.queues import Queue
 import psutil
 import logging
+
 logger = logging.getLogger(__package__)
 
 
 class QueueMailBox(MailBox):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, name, *args, **kwargs):
         super(QueueMailBox, self).__init__(*args, **kwargs)
+        self._name = name
         self._queue = Queue()
         self._ready = True
 
@@ -32,5 +34,5 @@ class QueueMailBox(MailBox):
     async def policy(self):
         mem_percent = psutil.virtual_memory().percent
         if mem_percent > 80:
-            logger.warning('memory usage is gt than 80')
+            logger.warning("memory usage is gt than 80")
         return True

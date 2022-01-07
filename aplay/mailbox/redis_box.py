@@ -1,24 +1,17 @@
-import aioredis
 import pickle
+import uuid
 from .base import MailBox
 
 
-class RedisQueue(MailBox):
+class RedisQueueMailBox(MailBox):
     """A subclass of Queue that retrieves most recently added entries first."""
 
-    def __init__(self, *args, mail_address=None, **kwargs):
-        super(RedisQueue, self).__init__(*args, **kwargs)
-        self._redis_uri = mail_address or 'redis://127.0.0.1'
-        self._pool = None
-
-    async def connect_pool(self):
-        if self._pool is None:
-            self._pool = await aioredis.create_redis_pool(
-                self._redis_uri)
-            self._ready = True
+    def __init__(self, pool=None, name=None):
+        self._name = name if name is not None else str(uuid.uuid1())
+        self._pool = pool
 
     async def prepare(self):
-        await self.connect_pool()
+        pass
 
     async def put(self, msg=None):
         await self._pool.lpush(self._name, self.dumps_msg(msg))
@@ -36,7 +29,7 @@ class RedisQueue(MailBox):
 
     def dumps_msg(self, msg=None):
         if msg is None:
-            return ''
+            return ""
         return pickle.dumps(msg)
 
     def loads_msg(self, msg=None):

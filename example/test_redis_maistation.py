@@ -7,7 +7,7 @@ import asyncio
 import random
 from aplay.kernel.actor import Actor
 from aplay.kernel.system import KernelActor
-from aplay.mailstation.simple import HashMailStation
+from aplay.mailstation.hash_redis import HashRedisMailStation
 
 from collections import defaultdict
 from copy import deepcopy
@@ -39,11 +39,7 @@ class Worker(Actor):
         self.worker_monitor = self.create_actor(name="count", actor_cls=Monitor)
 
     def user_task_callback(self, *args, **kwargs):
-        excep = args[0].exception()
-        if excep is not None:
-            print("--user_error--", excep, kwargs)
-        else:
-            print("--finish--", kwargs)
+        print("--user_task_callback----", args[0].exception(), kwargs)
 
     async def msg_handler(self, msg=None):
         print("worker--", msg)
@@ -54,8 +50,8 @@ class Worker(Actor):
             if msg_type == "text":
                 print("--text--", msg)
             else:
-                cc = 1 / 0
-                # print("--voice--", msg)
+                # cc = 1 / 0
+                print("--voice--", msg)
             await self.worker_monitor.tell(msg)
 
 
@@ -72,8 +68,11 @@ class MyKernel(KernelActor):
             tt = random.choice(["voice", "text"])
             msg = {"msg_type": tt, "content": f"hello voice{i}"}
             await self.send_to_address("/test", msg)
+        print(self._mail_station._address_book)
 
 
-bb = MyKernel("kernel", mail_station=HashMailStation())
+bb = MyKernel(
+    "kernel", mail_station=HashRedisMailStation(station_address="redis://10.64.146.231")
+)
 bb.send_nowait("start")
 bb.start()

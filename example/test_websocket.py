@@ -10,7 +10,8 @@ import concurrent
 import json
 from aplay.kernel.actor import Actor
 from aplay.kernel.system import KernelActor
-from aplay.mailbox.redis_box import RedisQueue
+from aplay.mailbox.redis_box import RedisQueueMailBox
+from aplay.mailstation.simple import HashMailStation
 
 msg_logger = logging.getLogger("sanic.access")
 
@@ -19,7 +20,6 @@ class SocketActor(Actor):
     def __init__(self, *args, **kwargs):
         super(SocketActor, self).__init__(*args, **kwargs)
         self.websocket = kwargs.get("websocket", None)
-        self._mailbox = RedisQueue(name=self._name)
 
     def decide_to_start(self):
         if self.websocket is None:
@@ -106,7 +106,7 @@ class WebsocketKernel(KernelActor):
         await self.websocket_server
 
 
-bb = WebsocketKernel("web")
+bb = WebsocketKernel("web", mail_station=HashMailStation())
 task = bb._loop.create_task(bb.send("hahaha"))
 print(task)
 bb.start()

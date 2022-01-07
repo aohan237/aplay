@@ -14,9 +14,85 @@ pip install aplay
 
 ### Usage
 
-refer to the example dirs
+#### Get Started
+
+```python
+import sys
+import os
+import asyncio
+import random
+from aplay.kernel.actor import Actor
+from aplay.kernel.system import KernelActor
+from aplay.mailstation.simple import HashMailStation
+
+from collections import defaultdict
+from copy import deepcopy
+
+
+class Monitor(Actor):
+    def __init__(self, *args, **kwargs):
+        super(Monitor, self).__init__(*args, **kwargs)
+        self.count_num = defaultdict(int)
+        self.displayer = self.create_actor(name="display", actor_cls=Displayer)
+
+    async def msg_handler(self, msg=None):
+        if msg is not None:
+            msg_type = msg.get("msg_type")
+            self.count_num[msg_type] += 1
+        await self.displayer.tell(deepcopy(self.count_num))
+
+
+class Displayer(Actor):
+    async def msg_handler(self, msg=None):
+        if msg is not None:
+            print("-----monitor num----", msg)
+        await self.send_to_address("/test", msg)
+
+
+class Worker(Actor):
+    def __init__(self, *args, **kwargs):
+        super(Worker, self).__init__(*args, **kwargs)
+        self.worker_monitor = self.create_actor(name="count", actor_cls=Monitor)
+
+    async def msg_handler(self, msg=None):
+        print("worker--", msg)
+        if msg is None:
+            return
+        else:
+            msg_type = msg.get("msg_type")
+            if msg_type == "text":
+                print("--text--", msg)
+            else:
+                # cc = 1 / 0
+                print("--voice--", msg)
+            await self.worker_monitor.tell(msg)
+
+
+class MyKernel(KernelActor):
+    def __init__(self, name=None, mail_station=None, **kwargs):
+        print(mail_station, kwargs)
+        super(MyKernel, self).__init__(name=name, mail_station=mail_station, **kwargs)
+        self.actor = self.create_actor(name="test", actor_cls=Worker)
+
+    async def msg_handler(self, msg=None):
+        print("mykernel", msg)
+
+        for i in range(100):
+            tt = random.choice(["voice", "text"])
+            msg = {"msg_type": tt, "content": f"hello {tt} {i}"}
+            await self.send_to_address("/test", msg)
+
+
+bb = MyKernel("kernel", mail_station=HashMailStation())
+bb.send_nowait("start")
+bb.start()
+```
+
+and more you can refer to the example dirs
+
 
 #### instructions
+
     KernelActor means the kernel to start or daemon the whole program. 
     it is only one process,you will have to use multiprocess if you want to utilize multi cores.
 
@@ -24,19 +100,18 @@ refer to the example dirs
 
     for worker actor ,you only need to inherit this class and define your funcion that needed. 
 
-#### Actor Api table
+#### Actor Details in Table
 
 ##### property
 name|description|useage
 -|-|-
 _name|actor's name|for identitify the actor
-_mailbox|actor's mailbox|the mailbox to store message
+_mail_station|actor's mail_station|the place to send or receive msg and delivery msg
 _child|actor's children (instances of actor)|the actors start by itself
 _runing_state|actor's running state|state the running state of the actor
 _human_runing_state|stopped by human|for manually stop the actor and by default ,it cant be started by its parent
 _parent|actor's parent actor|actor's parent
-_kernel|actor's kernel|the daemon kernel of the actor
-_address｜the actor's address from the kernel| the actor' address
+_address|the actor's address that register in the mail station| mail address
 _loop|actor's loop|actor's loop
 
 ##### functions need to inderited
@@ -77,4 +152,4 @@ Requirements
 License
 -------
 
-The aplay is offered under MIT license.
+The aplay is offered under AGPL license.

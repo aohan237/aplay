@@ -1,3 +1,4 @@
+# for now not running ,waiting for fix
 import sys
 import os
 
@@ -6,6 +7,8 @@ sys.path.append("/".join(os.getcwd().split("/")[:-1]))
 import logging
 from aplay.kernel.actor import Actor
 from aplay.kernel.system import KernelActor
+from aplay.mailstation.simple import HashMailStation
+
 from sanic import Sanic
 from sanic.response import json
 import json as ujson
@@ -32,11 +35,19 @@ app = Sanic(name="aplay", log_config=None)
 # app.config.KEEP_ALIVE = False
 
 
+app = Sanic("MyHelloWorldApp")
+
+
 @app.get("/")
-async def test(request):
-    actor = request.app.ctx.actor
-    await actor.send(message={"hello": "sss"})
+async def hello_world(request):
     return json({"hello": "sss"})
+
+
+# @app.get("/")
+# async def test(request):
+#     actor = request.app.ctx.actor
+#     await actor.send(message={"hello": "sss"})
+#     return json({"hello": "sss"})
 
 
 class SanicKernel(KernelActor):
@@ -49,11 +60,12 @@ class SanicKernel(KernelActor):
         """
         sanic loop does not support use loop outside,only this way can do
         """
+
         await self.app.create_server(
             host="0.0.0.0", port=8000, return_asyncio_server=True
         )
 
 
-bb = SanicKernel("sanic")
+bb = SanicKernel("sanic", mail_station=HashMailStation())
 bb.send_nowait("start")
 bb.start()

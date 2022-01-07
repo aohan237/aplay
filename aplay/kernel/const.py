@@ -1,9 +1,11 @@
-ACTOR_STOPPED = 'stopped'
+ACTOR_STOPPED = "stopped"
 
-ACTOR_STARTED = 'started'
+ACTOR_STARTED = "started"
 
-ACTOR_RUNNING = 'running'
+ACTOR_RUNNING = "running"
 
-ACTOR_BLANK = 'running'
+ACTOR_BLANK = "running"
 
-ACTOR_INIT = 'init'
+ACTOR_INIT = "init"
+
+SEP = "/"
