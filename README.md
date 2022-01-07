@@ -90,6 +90,9 @@ bb.start()
 
 and more you can refer to the example dirs
 
+you can use it as a task queue and something else.if you dont want too heavy of celery or rq ,etc
+
+just enjoy it
 
 #### instructions
 
