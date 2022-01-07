@@ -74,5 +74,5 @@ class MyKernel(KernelActor):
 bb = MyKernel(
     "kernel", mail_station=HashRedisMailStation(station_address="redis://10.64.146.231")
 )
-bb.send_nowait("start")
+bb.tell_nowait("start")
 bb.start()

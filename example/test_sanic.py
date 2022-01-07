@@ -1,4 +1,4 @@
-# for now not running ,waiting for fix
+# works for sanic==20.12.4, sanic is rapidly breaking changes, so we need to test sanic==20.12.3
 import sys
 import os
 
@@ -28,7 +28,7 @@ class MessageActor(Actor):
 
     async def msg_handler(self, msg=None):
         print("msg_handler", msg)
-        await asyncio.sleep(5)
+        await asyncio.sleep(1)
 
 
 app = Sanic(name="aplay", log_config=None)
@@ -39,22 +39,17 @@ app = Sanic("MyHelloWorldApp")
 
 
 @app.get("/")
-async def hello_world(request):
+async def test(request):
+    actor = request.app.actor
+    await actor.tell(msg={"hello": "sss"})
     return json({"hello": "sss"})
-
-
-# @app.get("/")
-# async def test(request):
-#     actor = request.app.ctx.actor
-#     await actor.send(message={"hello": "sss"})
-#     return json({"hello": "sss"})
 
 
 class SanicKernel(KernelActor):
     def __init__(self, *args, **kwargs):
         super(SanicKernel, self).__init__(*args, **kwargs)
         self.app = app
-        self.app.ctx.actor = self.create_actor("msg", actor_cls=MessageActor)
+        self.app.actor = self.create_actor("msg", actor_cls=MessageActor)
 
     async def msg_handler(self, msg=None):
         """
@@ -67,5 +62,5 @@ class SanicKernel(KernelActor):
 
 
 bb = SanicKernel("sanic", mail_station=HashMailStation())
-bb.send_nowait("start")
+bb.tell_nowait("start")
 bb.start()

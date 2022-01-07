@@ -84,7 +84,7 @@ class MyKernel(KernelActor):
 
 
 bb = MyKernel("kernel", mail_station=HashMailStation())
-bb.send_nowait("start")
+bb.tell_nowait("start")
 bb.start()
 ```
 

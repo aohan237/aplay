@@ -35,7 +35,7 @@ class SocketActor(Actor):
         if not isinstance(msg, str):
             msg = json.dumps(msg)
         if self.websocket and msg:
-            await self.websocket.send(msg)
+            await self.websocket.tell(msg)
 
 
 class WebsocketKernel(KernelActor):
@@ -89,7 +89,7 @@ class WebsocketKernel(KernelActor):
 
                 # send data to to user socket
                 actor = self._child.get(to_user)
-                await actor.send(data)
+                await actor.tell(data)
             # start handle actor
             if from_actor is not None:
                 from_actor.start()
@@ -107,6 +107,5 @@ class WebsocketKernel(KernelActor):
 
 
 bb = WebsocketKernel("web", mail_station=HashMailStation())
-task = bb._loop.create_task(bb.send("hahaha"))
-print(task)
+task = bb._loop.create_task(bb.tell("hahaha"))
 bb.start()

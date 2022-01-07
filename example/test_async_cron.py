@@ -36,5 +36,5 @@ job2 = (
 bb = SchedulerKernel(mail_station=HashMailStation())
 bb.sch.add_job(myjob)
 bb.sch.add_job(job2)
-bb.send_nowait("hahaha")
+bb.tell_nowait("hahaha")
 bb.start()

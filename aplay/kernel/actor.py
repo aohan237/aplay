@@ -65,14 +65,6 @@ class Actor:
         else:
             return True
 
-    async def send(self, message=None):
-        msg = message
-        return await self._mail_station.send_to_address(self._address, msg)
-
-    def send_nowait(self, message=None):
-        task = self._loop.create_task(self.send(message=message))
-        return task
-
     async def check_address_available(self, address):
         if self._address == SEP and address != SEP:
             return True
@@ -191,3 +183,7 @@ class Actor:
 
     async def tell(self, msg=None):
         return await self.msg_handler(msg=msg)
+
+    def tell_nowait(self, msg=None):
+        task = self._loop.create_task(self.tell(msg=msg))
+        return task

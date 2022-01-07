@@ -48,11 +48,11 @@ class NsqKernelActor(KernelActor):
         await reader.subscribe(topic, channel)
         msg_actor = self.create_actor("msg", actor_cls=MessageActor)
         async for message in reader.messages():
-            await msg_actor.send(message)
+            await msg_actor.tell(message)
 
 
 bb = NsqKernelActor("nsq", mail_station=HashMailStation())
-bb.send_nowait(
+bb.tell_nowait(
     {
         "nsqd_tcp_addresses": ["127.0.0.1:4150"],
         "max_in_flight": 200,
