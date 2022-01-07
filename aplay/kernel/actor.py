@@ -74,6 +74,8 @@ class Actor:
         return task
 
     async def check_address_available(self, address):
+        if self._address == SEP and address != SEP:
+            return True
         level_length = len(address.split(SEP))
         self_level_length = len(self._address.split(SEP))
         if self_level_length < level_length:

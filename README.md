@@ -2,8 +2,7 @@
 [![Downloads](https://pepy.tech/badge/aplay)](https://pepy.tech/project/aplay)
 [![PyPI version](https://badge.fury.io/py/aplay.svg)](https://badge.fury.io/py/aplay)
 
-## **python actor model(live in a Play,LOL) implement using asyncio**
-
+## **python actor model implement using asyncio**
 
 ### Install
 
@@ -11,6 +10,7 @@
 
 pip install aplay
 
+**from 1.0.0 there is breaking change in api**
 
 ### Usage
 
@@ -152,4 +152,4 @@ Requirements
 License
 -------
 
-The aplay is offered under AGPL license.
+The aplay is offered under AGPLV3 license.
