@@ -1,6 +1,7 @@
 # aplay
 [![Downloads](https://pepy.tech/badge/aplay)](https://pepy.tech/project/aplay)
 [![PyPI version](https://badge.fury.io/py/aplay.svg)](https://badge.fury.io/py/aplay)
+![PyPI version](https://img.shields.io/pypi/pyversions/aplay)
 
 ## **python actor model implement using asyncio**
 
