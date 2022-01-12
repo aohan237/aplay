@@ -1,13 +1,14 @@
-import sys
 import os
+import sys
 
 pwd = os.getcwd()
 sys.path.append("/".join(os.getcwd().split("/")[:-1]))
-import logging
-import websockets
 import asyncio
 import concurrent
 import json
+import logging
+
+import websockets
 from aplay.kernel.actor import Actor
 from aplay.kernel.system import KernelActor
 from aplay.mailbox.redis_box import RedisQueueMailBox
@@ -32,10 +33,11 @@ class SocketActor(Actor):
         self.websocket = None
 
     async def msg_handler(self, msg=None):
+        print("SocketActor data", self.websocket, msg)
         if not isinstance(msg, str):
             msg = json.dumps(msg)
-        if self.websocket and msg:
-            await self.websocket.tell(msg)
+        if self.websocket is not None and self.websocket.open and msg:
+            await self.websocket.send(msg)
 
 
 class WebsocketKernel(KernelActor):
@@ -49,7 +51,8 @@ class WebsocketKernel(KernelActor):
         from_actor = None
         while True:
             try:
-                data = await asyncio.wait_for(websocket.recv(), 2)
+                #  data = await asyncio.wait_for(websocket.recv(), 2)
+                data = await websocket.recv()
             except websockets.exceptions.ConnectionClosed:
                 print("websocket is closed")
                 break
@@ -67,14 +70,11 @@ class WebsocketKernel(KernelActor):
 
                 # prepare for user socket
                 if from_user not in self._child:
-                    from_actor = self.create_actor(
-                        name=from_user, actor_cls=SocketActor
-                    )
+                    from_actor = self.create_actor(name=from_user, actor_cls=SocketActor)
                 else:
                     from_actor = self._child.get(from_user)
                 if from_actor.websocket is not websocket:
                     from_actor.set_websocket(websocket)
-                print("from_actor data:", from_actor.name, from_actor.mailbox.size())
 
                 # 记录websocket的用户
                 if websocket not in self.socket_dict:
