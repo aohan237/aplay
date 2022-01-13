@@ -1,8 +1,9 @@
 import asyncio
 import weakref
 from functools import partial
+
+from .const import ACTOR_INIT, ACTOR_RUNNING, ACTOR_STARTED, ACTOR_STOPPED, SEP
 from .logger import actor_logger
-from .const import ACTOR_RUNNING, ACTOR_STARTED, ACTOR_STOPPED, ACTOR_INIT, SEP
 
 
 class Actor:
@@ -137,10 +138,7 @@ class Actor:
 
     async def prepare_children(self):
         for _, child in self._child.items():
-            if (
-                child._runing_state == ACTOR_INIT
-                or child._runing_state == ACTOR_STOPPED
-            ):
+            if child._runing_state == ACTOR_INIT or child._runing_state == ACTOR_STOPPED:
                 child.start()
 
     async def create_msg_task(self, msg):
