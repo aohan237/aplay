@@ -22,9 +22,6 @@ class Msg(UserDict):
             res = super(Msg, self).__delattr__(attr)
         return res
 
-    def __repr__(self):
-        return super(Msg, self).__repr__()
-
     def __init__(self, source=None, target=None, flow_id=None, flow_index=0, body=None):
         """TODO: to be defined."""
         self.data = {
