@@ -141,7 +141,13 @@ class Actor:
             if child._runing_state == ACTOR_INIT or child._runing_state == ACTOR_STOPPED:
                 child.start()
 
-    async def create_msg_task(self, msg):
+    async def ask(self, msg, timeout=5, block=True):
+        if block:
+            return await asyncio.wait_for(self.msg_handler(msg), timeout=timeout)
+        else:
+            return self._loop.create_task(self.msg_handler(msg))
+
+    def create_msg_task(self, msg):
         task = self._loop.create_task(self.msg_handler(msg))
         m_callback = partial(self.handle_task_done, msg=msg)
         task.add_done_callback(m_callback)
@@ -165,7 +171,7 @@ class Actor:
                 while not await mailbox.empty():
                     if self._running_task < self._max_tasks:
                         msg = await mailbox.get()
-                        await self.create_msg_task(msg)
+                        self.create_msg_task(msg)
                     else:
                         actor_logger.info(
                             f"{self._address} running task exceeds max tasks,waiting"
@@ -180,7 +186,7 @@ class Actor:
         return NotImplemented
 
     async def tell(self, msg=None):
-        return await self.msg_handler(msg=msg)
+        return self.create_msg_task(msg)
 
     def tell_nowait(self, msg=None):
         task = self._loop.create_task(self.tell(msg=msg))
